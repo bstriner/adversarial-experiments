@@ -14,13 +14,13 @@ a_loss = -(a(1)*b(3)+a(2)*b(1)+a(3)*b(2));
 b_loss = -(b(1)*a(3)+b(2)*a(1)+b(3)*a(2));
 
 %% barrier
-w1 = 0.01;
-w2 = 0.01;
-a_loss = a_loss - w1*sum(log(w2*a));
-b_loss = b_loss - w1*sum(log(w2*b));
+%w1 = 0.01;
+%w2 = 0.01;
+%a_loss = a_loss - w1*sum(log(w2*a));
+%b_loss = b_loss - w1*sum(log(w2*b));
 
 %% gradient descent updates
-lr=0.03;
+lr=0.01;
 a_diff = [diff(a_loss, a_theta(1)); diff(a_loss, a_theta(2))];
 b_diff = [diff(b_loss, b_theta(1)); diff(b_loss, b_theta(2))];
 a_theta_update = a_theta - lr*a_diff;
@@ -39,7 +39,7 @@ b_theta_t = b_theta_t(1:2,1);
 
 %% train model
 nb_epoch = 100;
-nb_batches = 10;
+nb_batches = 100;
 path='rock-paper-scissors-barrier-output';
 for epoch=1:nb_epoch
     % Retrieve current parameters
