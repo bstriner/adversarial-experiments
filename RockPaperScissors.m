@@ -15,7 +15,7 @@ b_loss = -(b(1)*a(3)+b(2)*a(1)+b(3)*a(2));
 
 %% Regularization
 % Set to 0 to disable regularization
-reg = 0.0;
+reg = 0.025;
 if reg>0
     a_loss = a_loss + reg*sum(a_theta.^2);
     b_loss = b_loss + reg*sum(b_theta.^2);
