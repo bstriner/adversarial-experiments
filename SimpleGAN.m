@@ -26,12 +26,35 @@ loss_d = loss_d + reg_weight*sum(theta_d_W.^2);
 %% Model updates
 lr_g = 5e-2;
 lr_d = 1e-1;
-diff_g = [diff(loss_g, theta_g(1));diff(loss_g, theta_g(2))];
+diff_g = DiffMatrix(loss_g, theta_g);
 theta_g_next = theta_g - lr_g * diff_g;
-diff_d_W = [diff(loss_d, theta_d_W(1));diff(loss_d, theta_d_W(2))];
+diff_d_W = DiffMatrix(loss_d, theta_d_W);
 theta_d_W_next = theta_d_W - lr_d * diff_d_W;
-diff_d_b = diff(loss_d, theta_d_b);
+diff_d_b = DiffMatrix(loss_d, theta_d_b);
 theta_d_b_next = theta_d_b - lr_d * diff_d_b;
+
+%% Analysis
+diffs = [diff_g;diff_d_W;diff_d_b];
+diff_syms = [theta_g;theta_d_W;theta_d_b];
+l = size(diffs,1);
+mat = zeros(l, l);
+subs_to = zeros(5,1);
+for i = 1:l
+    for j = 1:1
+        mat(i,j) = double(vpa(subs(diff(diffs(i), diff_syms(j)),...
+            diff_syms, subs_to)));
+    end
+end
+
+lr = 1e-3;
+eigs = eig(eye(5) - lr*mat);
+disp(eigs);
+disp(abs(eigs));
+
+eigs = eig(-mat);
+disp(eigs);
+disp(abs(eigs));
+
 
 %% Random initialization
 theta_g_t = rand(2,1);
@@ -42,32 +65,34 @@ theta_d_b_t = rand();
 nb_epoch = 600;
 nb_batch = 1;
 nb_batch_d = 10;
-for epoch = 1:nb_epoch
-    % Display parameters
-    disp(theta_g_t);
-    GANGraph('simple-gan', epoch, ...
-        x_real, theta_g_t, theta_d_W_t, theta_d_b_t);
-    for batch = 1:nb_batch
-        % Train descriminator nb_batch_d times
-        for batch_d = 1:nb_batch_d
-            % Calculate updates
-            theta_d_W_update = double(vpa(subs(subs(subs(theta_d_W_next, ...
+%{
+    for epoch = 1:nb_epoch
+        % Display parameters
+        disp(theta_g_t);
+        GANGraph('simple-gan', epoch, ...
+            x_real, theta_g_t, theta_d_W_t, theta_d_b_t);
+        for batch = 1:nb_batch
+            % Train descriminator nb_batch_d times
+            for batch_d = 1:nb_batch_d
+                % Calculate updates
+                theta_d_W_update = double(vpa(subs(subs(subs(theta_d_W_next, ...
+                    theta_g, theta_g_t), ...
+                    theta_d_W, theta_d_W_t), ...
+                    theta_d_b, theta_d_b_t)));
+                theta_d_b_update = double(vpa(subs(subs(subs(theta_d_b_next, ...
+                    theta_g, theta_g_t), ...
+                    theta_d_W, theta_d_W_t), ...
+                    theta_d_b, theta_d_b_t)));
+                % Perform updates
+                theta_d_W_t = theta_d_W_update;
+                theta_d_b_t = theta_d_b_update;
+            end
+            % Train generator once
+            theta_g_update = double(vpa(subs(subs(subs(theta_g_next, ...
                 theta_g, theta_g_t), ...
                 theta_d_W, theta_d_W_t), ...
                 theta_d_b, theta_d_b_t)));
-            theta_d_b_update = double(vpa(subs(subs(subs(theta_d_b_next, ...
-                theta_g, theta_g_t), ...
-                theta_d_W, theta_d_W_t), ...
-                theta_d_b, theta_d_b_t)));
-            % Perform updates
-            theta_d_W_t = theta_d_W_update;
-            theta_d_b_t = theta_d_b_update;
+            theta_g_t = theta_g_update;
         end
-        % Train generator once
-        theta_g_update = double(vpa(subs(subs(subs(theta_g_next, ...
-            theta_g, theta_g_t), ...
-            theta_d_W, theta_d_W_t), ...
-            theta_d_b, theta_d_b_t)));
-        theta_g_t = theta_g_update;
     end
-end
+%}
