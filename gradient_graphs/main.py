@@ -5,10 +5,10 @@ from gan import gan_gradients
 from mbwgan import mbwgan_gradients
 from mbwugan import mbwugan_gradients
 import os
-from graph import graph_gradients, write_gradients
+from graph import graph_gradients, write_gradients, write_weights
 from constraints import L1Constraint, LInfConstraint, L1ConstraintHard, L1ConstraintByAxis
 from keras.regularizers import L1L2
-
+from regularizers import LtestRegularizer
 
 def load_models():
     models = []
@@ -31,7 +31,7 @@ def load_models():
     """
     nb_batch = 4096
     lr = 3e-4
-    hidden_dim=256
+    hidden_dim = 256
     models.append(('gan',
                    gan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr)))
     models.append(('gan-linf-1e1',
@@ -43,20 +43,43 @@ def load_models():
     models.append(('gan-linf-1e3',
                    gan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: LInfConstraint(1e-3))))
     models.append(('gan-reg',
-                   gan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr,  reg=lambda: L1L2(1e-2, 1e-2))))
+                   gan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, reg=lambda: L1L2(1e-4, 1e-4))))
     models.append(('wgan-linf-1e1'.format(nb_batch),
                    wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: LInfConstraint(1e-1))))
+    models.append(('wgan-linf-1e1-norm'.format(nb_batch),
+                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: LInfConstraint(1e-1),
+                                  norm=True)))
     models.append(('wgan-linf-1e2'.format(nb_batch),
                    wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: LInfConstraint(1e-2))))
     models.append(('wgan-reg'.format(nb_batch),
-                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, reg=lambda: L1L2(1e1, 1e1))))
+                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, reg=lambda: L1L2(1e-4, 1e-4))))
+    models.append(('wgan-l1-reg'.format(nb_batch),
+                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, reg=lambda: L1L2(1e-2, 0))))
+    models.append(('wgan-reg-norm'.format(nb_batch),
+                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, reg=lambda: L1L2(1e-4, 1e-4),
+                                  norm=True)))
     models.append(('wgan-l1'.format(nb_batch),
                    wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: L1Constraint(1))))
+    models.append(('wgan-l1-norm'.format(nb_batch),
+                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: L1Constraint(1),
+                                  norm=True)))
     models.append(('wgan-l1-hard'.format(nb_batch),
                    wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: L1ConstraintHard(1))))
     models.append(('wgan-l1-hard'.format(nb_batch),
-                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: L1ConstraintByAxis(1e-1))))
-    #models.append(('wgan-l2'.format(nb_batch),
+                   wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr,
+                                  con=lambda: L1ConstraintByAxis(1e-1))))
+    #models.append(('wgan-ltest-1e2'.format(nb_batch),
+    #               wgan_gradients(nb_batch=nb_batch, hidden_dim=8, lr=lr, reg=lambda: LtestRegularizer(1e-2))))
+    #models.append(('wgan-ltest-10'.format(nb_batch),
+    #               wgan_gradients(nb_batch=nb_batch, hidden_dim=8, lr=lr, reg=lambda: LtestRegularizer(10.0))))
+
+    models.append(('wgan-test2'.format(nb_batch),
+                       wgan_gradients(nb_batch=nb_batch, hidden_dim=8, lr=lr, ltest=True)))
+    #models.append(('wgan-ltest-1e1'.format(nb_batch),
+    #               wgan_gradients(nb_batch=nb_batch, hidden_dim=8, lr=lr, reg=lambda: LtestRegularizer(1e-1))))
+    #models.append(('wgan-ltest-1e3'.format(nb_batch),
+    #               wgan_gradients(nb_batch=nb_batch, hidden_dim=8, lr=lr, reg=lambda: LtestRegularizer(1e-3))))
+    # models.append(('wgan-l2'.format(nb_batch),
     #               wgan_gradients(nb_batch=nb_batch, hidden_dim=hidden_dim, lr=lr, con=lambda: L2Constraint(1))))
     nb_batch = 2048
     models.append(('mbwgan-linf-128hidden'.format(nb_batch),
@@ -99,6 +122,8 @@ def main():
                 xfake_gradients = model(xreal, xfake)
                 graph_gradients(path_png, xreal, xfake, xfake_gradients)
                 write_gradients(path_txt, xfake, xfake_gradients)
+                if isinstance(xfake_gradients, tuple) and len(xfake_gradients) > 2:
+                    write_weights(path, xfake_gradients[2])
 
 
 if __name__ == "__main__":

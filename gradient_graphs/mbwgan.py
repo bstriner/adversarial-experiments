@@ -31,7 +31,7 @@ def mbwgan_gradients_calc(xreal, xfake, nb_batch, lr, hidden_dim, con, reg, nois
     act = lambda: Activation('tanh')
     h1 = Dense(hidden_dim, kernel_constraint=con(), kernel_regularizer=reg())
     h2 = Dense(hidden_dim, kernel_constraint=con(), kernel_regularizer=reg())
-    #h3 = Dense(hidden_dim, kernel_constraint=con())
+    h3 = Dense(hidden_dim, kernel_constraint=con())
     hy = Dense(1, kernel_constraint=con(), kernel_regularizer=reg())
 
     def f(x):
@@ -46,8 +46,8 @@ def mbwgan_gradients_calc(xreal, xfake, nb_batch, lr, hidden_dim, con, reg, nois
             h = h1(xxx)
             h = act()(h)
             h = h2(h)
-            #h = act()(h)
-            #h = h3(h)
+            h = act()(h)
+            h = h3(h)
             h = act()(h)
             y = hy(h)
             return y
@@ -66,7 +66,7 @@ def mbwgan_gradients_calc(xreal, xfake, nb_batch, lr, hidden_dim, con, reg, nois
         _xr = xreal + np.random.normal(0, noise, xreal.shape)
         _xf = xfake + np.random.normal(0, noise, xfake.shape)
         loss = m.train_on_batch([_xr, _xf], targets)
-        print "Batch: {}, Loss: {}".format(batch, loss[0])
+        print "MBWGAN Batch: {}, Loss: {}".format(batch, loss[0])
 
     #grads, _ = theano.scan(lambda _i, _y, _x: T.grad(T.mean(_y, axis=None), _x)[0, _i, :],
     #                       sequences=[T.arange(xf.shape[1])], non_sequences=[yf, xf], outputs_info=[None])

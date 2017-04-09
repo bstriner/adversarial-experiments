@@ -52,3 +52,10 @@ def write_gradients(path, xfake, xfake_gradients):
             f.write("Point: <{},{}>, Gradient: <{},{}>\n".format(xfake[i, 0], xfake[i, 1],
                                                                  xfake_gradients[i, 0],
                                                                  xfake_gradients[i, 1]))
+
+def write_weights(path, weights):
+    for k,v in weights.iteritems():
+        p = path+"-{}.txt".format(k)
+        if not os.path.exists(os.path.dirname(p)):
+            os.makedirs(os.path.dirname(p))
+        np.savetxt(p, v)
