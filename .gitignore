@@ -88,3 +88,8 @@ ENV/
 # Rope project settings
 .ropeproject
 /gradient_graphs/output
+/experiments/output
+/wgan/output
+/simple-gan
+/.idea
+/tlwgan/output
